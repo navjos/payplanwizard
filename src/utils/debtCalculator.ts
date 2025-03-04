@@ -1,3 +1,4 @@
+
 import { Debt, DebtCalculationResult, DebtWithPayoff, RepaymentMethod } from "../types/debt";
 import { formatCurrency } from "./formatters";
 
@@ -149,13 +150,15 @@ export const calculateDebtRepayment = (
     currentBalance: debt.balance,
     totalInterest: 0,
     monthsToPayoff: 0,
-    paymentSchedule: [] as string[]
+    paymentSchedule: [] as string[],
+    monthlyPayments: [] as {month: number, amount: number}[]
   }));
   
   let month = 0;
   let totalInterestPaid = 0;
   let availablePayment = originalTotalMonthly + extraPayment;
   let allPaidOff = false;
+  let maxMonth = 0;
   
   while (!allPaidOff && month < 1200) {
     month++;
@@ -183,8 +186,17 @@ export const calculateDebtRepayment = (
       debt.currentBalance -= payment;
       remainingPayment -= payment;
       
+      // Track this month's payment
+      debt.monthlyPayments.push({
+        month,
+        amount: payment
+      });
+      
       if (debt.currentBalance <= 0 && debt.monthsToPayoff === 0) {
         debt.monthsToPayoff = month;
+        if (month > maxMonth) {
+          maxMonth = month;
+        }
       }
     }
     
@@ -196,8 +208,17 @@ export const calculateDebtRepayment = (
         debt.currentBalance -= paymentToApply;
         remainingPayment -= paymentToApply;
         
+        // Update this month's payment
+        const paymentEntry = debt.monthlyPayments.find(p => p.month === month);
+        if (paymentEntry) {
+          paymentEntry.amount += paymentToApply;
+        }
+        
         if (debt.currentBalance <= 0 && debt.monthsToPayoff === 0) {
           debt.monthsToPayoff = month;
+          if (month > maxMonth) {
+            maxMonth = month;
+          }
         }
         
         if (remainingPayment <= 0) break;
@@ -208,11 +229,63 @@ export const calculateDebtRepayment = (
   const debtsWithPayoff: DebtWithPayoff[] = workingDebts.map(debt => {
     if (debt.monthsToPayoff === 0 && debt.currentBalance > 0) {
       debt.monthsToPayoff = month;
+      if (month > maxMonth) {
+        maxMonth = month;
+      }
     }
     
-    const schedule = [`Pay ${formatCurrency(debt.minimumPayment)} minimum each month.`];
-    if (debt.monthsToPayoff < month) {
-      schedule.push(`Fully paid off in month ${debt.monthsToPayoff}.`);
+    // Generate a clearer payment schedule
+    const schedule: string[] = [];
+    
+    // Group payments by month and amount
+    const paymentByAmount: {[key: string]: number[]} = {};
+    
+    debt.monthlyPayments.forEach(payment => {
+      const amountKey = formatCurrency(payment.amount);
+      if (!paymentByAmount[amountKey]) {
+        paymentByAmount[amountKey] = [];
+      }
+      paymentByAmount[amountKey].push(payment.month);
+    });
+    
+    // Create schedule entries
+    Object.entries(paymentByAmount).forEach(([amount, months]) => {
+      if (months.length === 1) {
+        schedule.push(`Pay ${amount} in month ${months[0]}.`);
+      } else if (months.length === debt.monthsToPayoff) {
+        schedule.push(`Pay ${amount} each month until paid off (${debt.monthsToPayoff} months).`);
+      } else if (months.length > 1) {
+        // Find consecutive ranges
+        const ranges: {start: number, end: number}[] = [];
+        let currentRange: {start: number, end: number} | null = null;
+        
+        months.sort((a, b) => a - b).forEach(month => {
+          if (!currentRange) {
+            currentRange = { start: month, end: month };
+          } else if (month === currentRange.end + 1) {
+            currentRange.end = month;
+          } else {
+            ranges.push({...currentRange});
+            currentRange = { start: month, end: month };
+          }
+        });
+        
+        if (currentRange) {
+          ranges.push(currentRange);
+        }
+        
+        ranges.forEach(range => {
+          if (range.start === range.end) {
+            schedule.push(`Pay ${amount} in month ${range.start}.`);
+          } else {
+            schedule.push(`Pay ${amount} in months ${range.start}-${range.end}.`);
+          }
+        });
+      }
+    });
+    
+    if (schedule.length === 0) {
+      schedule.push(`Pay minimum payment each month until paid off.`);
     }
     
     return {
@@ -234,7 +307,7 @@ export const calculateDebtRepayment = (
   const totalAmountPaid = totalPrincipal + totalInterestPaid;
   
   return {
-    totalMonthsToDebtFree: month,
+    totalMonthsToDebtFree: maxMonth, // Using the actual max month when the last debt is paid off
     totalInterestPaid,
     totalAmountPaid,
     originalTotalMonthly,

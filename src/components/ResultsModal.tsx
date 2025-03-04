@@ -82,13 +82,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ open, onOpenChange, results
                 <tbody className="bg-white divide-y divide-border">
                   {results.debtsInPayoffOrder.map((debt, index) => {
                     const totalPayments = debt.balance + debt.totalInterestPaid;
-                    let paymentSchedule = "";
-                    
-                    if (debt.paymentSchedule && debt.paymentSchedule.length > 0) {
-                      paymentSchedule = debt.paymentSchedule.join("\n");
-                    } else {
-                      paymentSchedule = `Pay ${formatCurrency(debt.newMonthlyPayment)} for ${debt.monthsToPayoff - 1} months.\nPay the remainder in the final month.`;
-                    }
                     
                     return (
                       <tr key={debt.id} className="transition-colors hover:bg-secondary/20">
@@ -108,7 +101,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ open, onOpenChange, results
                           {formatCurrency(totalPayments)}
                         </td>
                         <td className="px-6 py-4 text-sm whitespace-pre-line">
-                          {paymentSchedule}
+                          {debt.paymentSchedule && debt.paymentSchedule.length > 0 
+                            ? debt.paymentSchedule.join("\n") 
+                            : `Pay ${formatCurrency(debt.minimumPayment)} each month until paid off.`}
                         </td>
                       </tr>
                     );
