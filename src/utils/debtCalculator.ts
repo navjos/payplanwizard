@@ -1,13 +1,12 @@
-
 import { Debt, DebtCalculationResult, DebtWithPayoff, RepaymentMethod } from "../types/debt";
 import { formatCurrency } from "./formatters";
 
 const sortDebts = (debts: Debt[], method: RepaymentMethod): Debt[] => {
   return [...debts].sort((a, b) => {
     if (method === 'avalanche') {
-      return b.apr - a.apr; // Highest interest rate first
+      return b.apr - a.apr;
     } else {
-      return a.balance - b.balance; // Lowest balance first
+      return a.balance - b.balance;
     }
   });
 };
@@ -19,25 +18,14 @@ const calculateMonthsToPayoff = (
 ): number => {
   if (payment <= 0 || balance <= 0) return 0;
   
-  // Monthly interest rate
   const monthlyRate = apr / 100 / 12;
   
-  // If interest rate is 0, simple division
   if (monthlyRate === 0) {
     return Math.ceil(balance / payment);
   }
   
-  // Formula for months to pay off a loan with interest
-  // M = -ln(1 - (P*r/PMT)) / ln(1 + r)
-  // Where:
-  // M = number of months
-  // P = principal (balance)
-  // r = monthly interest rate
-  // PMT = monthly payment
-  
-  // Check if payment is greater than monthly interest
   if (payment <= balance * monthlyRate) {
-    return Infinity; // Payment too small to ever pay off
+    return Infinity;
   }
   
   const months = -Math.log(1 - (balance * monthlyRate) / payment) / Math.log(1 + monthlyRate);
@@ -75,7 +63,6 @@ const generatePaymentSchedule = (
     const interest = remainingBalance * monthlyInterestRate;
     let principal = monthlyPayment - interest;
     
-    // Adjust for final payment
     if (principal > remainingBalance) {
       principal = remainingBalance;
       monthlyPayment = principal + interest;
@@ -83,7 +70,6 @@ const generatePaymentSchedule = (
     
     remainingBalance -= principal;
     
-    // Look ahead to see if this is the last payment of this amount
     const isLastPayment = remainingBalance <= 0;
     const isPaymentChange = !isLastPayment && Math.abs(previousPayment - monthlyPayment) > 0.01;
     
@@ -114,7 +100,6 @@ const generatePaymentSchedule = (
     }
     
     if (isLastPayment && paymentChanges === 1) {
-      // Simplify schedule if there's only one payment type
       schedule.length = 0;
       if (months > 1) {
         schedule.push(`Pay ${formatCurrency(previousPayment)} for ${months - 1} months.`);
@@ -131,7 +116,6 @@ const generatePaymentSchedule = (
   return schedule;
 };
 
-// Helper function to find when the payment will change
 const findNextPaymentChange = (
   balance: number,
   monthlyInterestRate: number,
@@ -139,8 +123,6 @@ const findNextPaymentChange = (
   currentMonth: number,
   totalMonths: number
 ): number => {
-  // Simplified: Look ahead to find next payment change
-  // For most scenarios, we'll just return the last month
   return totalMonths;
 };
 
@@ -159,73 +141,100 @@ export const calculateDebtRepayment = (
     };
   }
 
-  // Sort debts according to the selected method
   const sortedDebts = sortDebts(debts, method);
   const originalTotalMonthly = debts.reduce((sum, debt) => sum + debt.minimumPayment, 0);
-  let remainingDebts = [...sortedDebts];
-  const debtsWithPayoff: DebtWithPayoff[] = [];
   
-  let totalMonths = 0;
+  const workingDebts = sortedDebts.map(debt => ({
+    ...debt,
+    currentBalance: debt.balance,
+    totalInterest: 0,
+    monthsToPayoff: 0,
+    paymentSchedule: [] as string[]
+  }));
+  
+  let month = 0;
   let totalInterestPaid = 0;
-  let runningExtraPayment = extraPayment;
+  let availablePayment = originalTotalMonthly + extraPayment;
+  let allPaidOff = false;
   
-  // Calculate payoff for each debt in sequence
-  while (remainingDebts.length > 0) {
-    const currentDebt = remainingDebts[0];
+  while (!allPaidOff && month < 1200) {
+    month++;
+    allPaidOff = true;
     
-    // Current payment is minimum payment plus any extra and snowball amounts
-    const currentPayment = currentDebt.minimumPayment + runningExtraPayment;
+    for (const debt of workingDebts) {
+      if (debt.currentBalance <= 0) continue;
+      
+      allPaidOff = false;
+      
+      const monthlyInterestRate = debt.apr / 100 / 12;
+      const interest = debt.currentBalance * monthlyInterestRate;
+      
+      debt.currentBalance += interest;
+      debt.totalInterest += interest;
+      totalInterestPaid += interest;
+    }
     
-    // Calculate months to payoff and interest for current debt
-    const monthsToPayoff = calculateMonthsToPayoff(
-      currentDebt.balance,
-      currentDebt.apr,
-      currentPayment
-    );
+    let remainingPayment = availablePayment;
     
-    const interestPaid = calculateInterestPaid(
-      currentDebt.balance,
-      currentDebt.apr,
-      currentPayment,
-      monthsToPayoff
-    );
+    for (const debt of workingDebts) {
+      if (debt.currentBalance <= 0) continue;
+      
+      let payment = Math.min(debt.minimumPayment, debt.currentBalance);
+      debt.currentBalance -= payment;
+      remainingPayment -= payment;
+      
+      if (debt.currentBalance <= 0 && debt.monthsToPayoff === 0) {
+        debt.monthsToPayoff = month;
+      }
+    }
     
-    // Generate payment schedule
-    const paymentSchedule = generatePaymentSchedule(
-      currentDebt.balance,
-      currentDebt.apr,
-      currentPayment,
-      monthsToPayoff
-    );
-    
-    // Add to result
-    debtsWithPayoff.push({
-      ...currentDebt,
-      monthsToPayoff,
-      totalInterestPaid: interestPaid,
-      newMonthlyPayment: currentPayment,
-      paymentSchedule
-    });
-    
-    // Update totals
-    totalInterestPaid += interestPaid;
-    
-    // Update max months if this debt takes longer
-    totalMonths = Math.max(totalMonths, monthsToPayoff);
-    
-    // Remove this debt from remaining debts
-    remainingDebts = remainingDebts.slice(1);
-    
-    // Add this debt's payment to the snowball for next debt
-    runningExtraPayment += currentDebt.minimumPayment;
+    if (remainingPayment > 0) {
+      for (const debt of workingDebts) {
+        if (debt.currentBalance <= 0) continue;
+        
+        const paymentToApply = Math.min(remainingPayment, debt.currentBalance);
+        debt.currentBalance -= paymentToApply;
+        remainingPayment -= paymentToApply;
+        
+        if (debt.currentBalance <= 0 && debt.monthsToPayoff === 0) {
+          debt.monthsToPayoff = month;
+        }
+        
+        if (remainingPayment <= 0) break;
+      }
+    }
   }
   
-  // Calculate total amount paid (principal + interest)
+  const debtsWithPayoff: DebtWithPayoff[] = workingDebts.map(debt => {
+    if (debt.monthsToPayoff === 0 && debt.currentBalance > 0) {
+      debt.monthsToPayoff = month;
+    }
+    
+    const schedule = [`Pay ${formatCurrency(debt.minimumPayment)} minimum each month.`];
+    if (debt.monthsToPayoff < month) {
+      schedule.push(`Fully paid off in month ${debt.monthsToPayoff}.`);
+    }
+    
+    return {
+      id: debt.id,
+      creditor: debt.creditor,
+      balance: debt.balance,
+      apr: debt.apr,
+      minimumPayment: debt.minimumPayment,
+      monthsToPayoff: debt.monthsToPayoff,
+      totalInterestPaid: debt.totalInterest,
+      newMonthlyPayment: debt.minimumPayment,
+      paymentSchedule: schedule
+    };
+  });
+  
+  debtsWithPayoff.sort((a, b) => a.monthsToPayoff - b.monthsToPayoff);
+  
   const totalPrincipal = debts.reduce((sum, debt) => sum + debt.balance, 0);
   const totalAmountPaid = totalPrincipal + totalInterestPaid;
   
   return {
-    totalMonthsToDebtFree: totalMonths,
+    totalMonthsToDebtFree: month,
     totalInterestPaid,
     totalAmountPaid,
     originalTotalMonthly,
