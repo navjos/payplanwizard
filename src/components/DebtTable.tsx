@@ -67,7 +67,7 @@ const DebtTable: React.FC<DebtTableProps> = ({
                 </td>
                 <td className="px-3 sm:px-6 py-3 sm:py-4 relative">
                   <span className="absolute left-3 sm:left-6 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                    <DollarSign size={14} className="sm:size-16" />
+                    <DollarSign size={12} className="sm:h-4 sm:w-4" />
                   </span>
                   <input
                     type="number"
@@ -100,12 +100,12 @@ const DebtTable: React.FC<DebtTableProps> = ({
                     step="0.01"
                   />
                   <span className="absolute right-3 sm:right-6 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                    <Percent size={14} className="sm:size-16" />
+                    <Percent size={12} className="sm:h-4 sm:w-4" />
                   </span>
                 </td>
                 <td className="px-3 sm:px-6 py-3 sm:py-4 relative">
                   <span className="absolute left-3 sm:left-6 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                    <DollarSign size={14} className="sm:size-16" />
+                    <DollarSign size={12} className="sm:h-4 sm:w-4" />
                   </span>
                   <input
                     type="number"
