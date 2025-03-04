@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Debt, DebtCalculationResult, RepaymentMethod } from "../types/debt";
 import DebtTable from "./DebtTable";
 import ResultsModal from "./ResultsModal";
@@ -8,8 +8,11 @@ import { DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
+import { supabase } from "../integrations/supabase/client";
+import { useAuth } from "../contexts/AuthContext";
 
 const DebtForm: React.FC = () => {
+  const { user } = useAuth();
   const [debts, setDebts] = useState<Debt[]>([
     {
       id: uuidv4(),
@@ -24,6 +27,43 @@ const DebtForm: React.FC = () => {
   const [extraPayment, setExtraPayment] = useState<number>(0);
   const [showResults, setShowResults] = useState<boolean>(false);
   const [results, setResults] = useState<DebtCalculationResult | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch user's debts from Supabase
+  useEffect(() => {
+    const fetchDebts = async () => {
+      if (!user) return;
+      
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('debts')
+          .select('*')
+          .order('created_at', { ascending: true });
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data.length > 0) {
+          const formattedDebts: Debt[] = data.map(debt => ({
+            id: debt.id,
+            creditor: debt.creditor,
+            balance: Number(debt.balance),
+            apr: Number(debt.apr),
+            minimumPayment: Number(debt.minimum_payment),
+          }));
+          setDebts(formattedDebts);
+        }
+      } catch (error: any) {
+        toast.error(`Error fetching debts: ${error.message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchDebts();
+  }, [user]);
 
   const handleDebtChange = (index: number, field: keyof Debt, value: string) => {
     const newDebts = [...debts];
@@ -65,6 +105,39 @@ const DebtForm: React.FC = () => {
     setExtraPayment(value);
   };
 
+  const saveDebtsToSupabase = async (debtsToSave: Debt[]) => {
+    if (!user) return;
+    
+    try {
+      // First, delete all existing debts for this user
+      const { error: deleteError } = await supabase
+        .from('debts')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (deleteError) throw deleteError;
+      
+      // Then insert all the current debts
+      const { error: insertError } = await supabase
+        .from('debts')
+        .insert(
+          debtsToSave.map(debt => ({
+            creditor: debt.creditor,
+            balance: debt.balance,
+            apr: debt.apr,
+            minimum_payment: debt.minimumPayment,
+            user_id: user.id
+          }))
+        );
+      
+      if (insertError) throw insertError;
+      
+      toast.success("Your debts have been saved");
+    } catch (error: any) {
+      toast.error(`Error saving debts: ${error.message}`);
+    }
+  };
+
   const handleCalculate = () => {
     // Validate inputs
     const hasEmptyCreditor = debts.some(debt => !debt.creditor.trim());
@@ -86,6 +159,9 @@ const DebtForm: React.FC = () => {
       return;
     }
     
+    // Save debts to Supabase
+    saveDebtsToSupabase(debts);
+    
     // Calculate results
     const calculationResults = calculateDebtRepayment(
       debts,
@@ -96,6 +172,14 @@ const DebtForm: React.FC = () => {
     setResults(calculationResults);
     setShowResults(true);
   };
+
+  if (isLoading) {
+    return (
+      <div className="w-full flex justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 space-y-10 py-8">
