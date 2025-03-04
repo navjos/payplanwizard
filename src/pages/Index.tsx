@@ -28,16 +28,26 @@ const Index: React.FC = () => {
             <div className="text-sm text-muted-foreground">
               {user?.email}
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={toggleLanguage} 
-              className="flex items-center gap-2"
-              aria-label={`Switch to ${language === 'en' ? 'Spanish' : 'English'}`}
-            >
-              <Globe size={16} />
-              <span>{language === 'en' ? 'ES' : 'EN'}</span>
-            </Button>
+            <div className="flex bg-secondary rounded-md">
+              <Button 
+                variant={language === 'en' ? "secondary" : "ghost"}
+                size="sm" 
+                onClick={() => setLanguage('en')} 
+                className={`rounded-r-none ${language === 'en' ? 'bg-primary/10 font-medium' : ''}`}
+                aria-label="Switch to English"
+              >
+                EN
+              </Button>
+              <Button 
+                variant={language === 'es' ? "secondary" : "ghost"}
+                size="sm" 
+                onClick={() => setLanguage('es')} 
+                className={`rounded-l-none ${language === 'es' ? 'bg-primary/10 font-medium' : ''}`}
+                aria-label="Switch to Spanish"
+              >
+                ES
+              </Button>
+            </div>
             <Button variant="outline" size="sm" onClick={() => signOut()} className="flex items-center gap-2">
               <LogOut size={16} />
               <span>{t('logout')}</span>

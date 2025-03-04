@@ -3,6 +3,7 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DebtCalculationResult } from "../types/debt";
 import { formatCurrency, formatPercent } from "../utils/formatters";
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface ResultsModalProps {
   open: boolean;
@@ -11,15 +12,17 @@ interface ResultsModalProps {
 }
 
 const ResultsModal: React.FC<ResultsModalProps> = ({ open, onOpenChange, results }) => {
+  const { t } = useLanguage();
+  
   if (!results) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl overflow-hidden glassmorphism">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-medium">Debt Repayment Plan</DialogTitle>
+          <DialogTitle className="text-2xl font-medium">{t('debtRepaymentPlan')}</DialogTitle>
           <DialogDescription>
-            Based on your inputs, here's your personalized debt repayment strategy.
+            {t('resultDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -28,15 +31,15 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ open, onOpenChange, results
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-secondary/50 rounded-lg p-6 text-center animate-slide-up" style={{ animationDelay: '0ms' }}>
               <div className="text-sm font-medium text-muted-foreground mb-1">
-                Time to Debt Freedom
+                {t('timeToDebtFreedom')}
               </div>
               <div className="text-3xl font-bold">
-                {results.totalMonthsToDebtFree} {results.totalMonthsToDebtFree === 1 ? 'month' : 'months'}
+                {results.totalMonthsToDebtFree} {results.totalMonthsToDebtFree === 1 ? t('month') : t('months')}
               </div>
             </div>
             <div className="bg-secondary/50 rounded-lg p-6 text-center animate-slide-up" style={{ animationDelay: '100ms' }}>
               <div className="text-sm font-medium text-muted-foreground mb-1">
-                Total Interest Paid
+                {t('totalInterestPaid')}
               </div>
               <div className="text-3xl font-bold">
                 {formatCurrency(results.totalInterestPaid)}
@@ -44,7 +47,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ open, onOpenChange, results
             </div>
             <div className="bg-secondary/50 rounded-lg p-6 text-center animate-slide-up" style={{ animationDelay: '200ms' }}>
               <div className="text-sm font-medium text-muted-foreground mb-1">
-                Total Amount Paid
+                {t('totalAmountPaid')}
               </div>
               <div className="text-3xl font-bold">
                 {formatCurrency(results.totalAmountPaid)}
@@ -54,28 +57,28 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ open, onOpenChange, results
 
           {/* Debt payoff order table */}
           <div className="animate-slide-up" style={{ animationDelay: '300ms' }}>
-            <h3 className="text-lg font-medium mb-4">Repayment Order</h3>
+            <h3 className="text-lg font-medium mb-4">{t('repaymentOrder')}</h3>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-border">
                 <thead className="bg-secondary/30">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Order
+                      {t('order')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Creditor
+                      {t('creditor')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Payoff Length
+                      {t('payoffLength')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Total Interest
+                      {t('totalInterestPaid')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Total Payments
+                      {t('totalPayments')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Payment Schedule
+                      {t('paymentSchedule')}
                     </th>
                   </tr>
                 </thead>
@@ -89,10 +92,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ open, onOpenChange, results
                           #{index + 1}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {debt.creditor || "Unnamed Debt"}
+                          {debt.creditor || t('unnamedDebt')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {debt.monthsToPayoff} {debt.monthsToPayoff === 1 ? 'month' : 'months'}
+                          {debt.monthsToPayoff} {debt.monthsToPayoff === 1 ? t('month') : t('months')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           {formatCurrency(debt.totalInterestPaid)}
@@ -103,7 +106,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ open, onOpenChange, results
                         <td className="px-6 py-4 text-sm whitespace-pre-line">
                           {debt.paymentSchedule && debt.paymentSchedule.length > 0 
                             ? debt.paymentSchedule.join("\n") 
-                            : `Pay ${formatCurrency(debt.minimumPayment)} each month until paid off.`}
+                            : `${formatCurrency(debt.minimumPayment)} ${t('payMonthlyUntilPaidOff')}`}
                         </td>
                       </tr>
                     );

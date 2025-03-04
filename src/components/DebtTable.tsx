@@ -3,6 +3,7 @@ import React from "react";
 import { Debt } from "../types/debt";
 import { X, DollarSign, Percent } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface DebtTableProps {
   debts: Debt[];
@@ -17,6 +18,8 @@ const DebtTable: React.FC<DebtTableProps> = ({
   onRemoveDebt,
   onAddDebt,
 }) => {
+  const { t } = useLanguage();
+  
   return (
     <div className="w-full overflow-hidden rounded-lg shadow-sm border border-border bg-white animate-fade-in">
       <div className="overflow-x-auto">
@@ -24,16 +27,16 @@ const DebtTable: React.FC<DebtTableProps> = ({
           <thead>
             <tr className="text-left">
               <th className="px-6 py-4 text-sm font-medium text-foreground tracking-wider">
-                Creditor
+                {t('creditor')}
               </th>
               <th className="px-6 py-4 text-sm font-medium text-foreground tracking-wider">
-                Balance
+                {t('balance')}
               </th>
               <th className="px-6 py-4 text-sm font-medium text-foreground tracking-wider">
-                APR
+                {t('apr')}
               </th>
               <th className="px-6 py-4 text-sm font-medium text-foreground tracking-wider">
-                Minimum Payment
+                {t('minimumPayment')}
               </th>
               <th className="px-6 py-4 text-sm font-medium text-foreground tracking-wider w-12"></th>
             </tr>
@@ -53,7 +56,7 @@ const DebtTable: React.FC<DebtTableProps> = ({
                     value={debt.creditor}
                     onChange={(e) => onDebtChange(index, "creditor", e.target.value)}
                     className="w-full bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-muted-foreground text-foreground input-transition"
-                    placeholder="Credit Card, Loan, etc."
+                    placeholder={t('creditorPlaceholder')}
                   />
                 </td>
                 <td className="px-6 py-4 relative">
@@ -117,7 +120,7 @@ const DebtTable: React.FC<DebtTableProps> = ({
           onClick={onAddDebt}
           className="w-full py-2 px-4 bg-white hover:bg-secondary/50 border border-border rounded-md transition-colors duration-200 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
         >
-          Add New Debt
+          {t('addNewDebt')}
         </button>
       </div>
     </div>

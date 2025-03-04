@@ -11,6 +11,7 @@ interface Translations {
 }
 
 const translations: Translations = {
+  // App layout translations
   appTitle: {
     en: 'Debt Payoff Planner',
     es: 'Planificador de Pago de Deudas'
@@ -26,6 +27,160 @@ const translations: Translations = {
   footer: {
     en: 'All calculations are estimates.',
     es: 'Todos los cálculos son estimaciones.'
+  },
+  
+  // Debt form translations
+  step1Title: {
+    en: 'Step 1: Enter Your Debts',
+    es: 'Paso 1: Ingresa tus Deudas'
+  },
+  step2Title: {
+    en: 'Step 2: Choose Repayment Method',
+    es: 'Paso 2: Elige el Método de Pago'
+  },
+  step3Title: {
+    en: 'Step 3: Extra Monthly Payment',
+    es: 'Paso 3: Pago Mensual Adicional'
+  },
+  calculateButton: {
+    en: 'Calculate Repayment Plan',
+    es: 'Calcular Plan de Pago'
+  },
+  addNewDebt: {
+    en: 'Add New Debt',
+    es: 'Agregar Nueva Deuda'
+  },
+  
+  // Debt table translations
+  creditor: {
+    en: 'Creditor',
+    es: 'Acreedor'
+  },
+  balance: {
+    en: 'Balance',
+    es: 'Saldo'
+  },
+  apr: {
+    en: 'APR',
+    es: 'TAE'
+  },
+  minimumPayment: {
+    en: 'Minimum Payment',
+    es: 'Pago Mínimo'
+  },
+  creditorPlaceholder: {
+    en: 'Credit Card, Loan, etc.',
+    es: 'Tarjeta de Crédito, Préstamo, etc.'
+  },
+  
+  // Repayment methods
+  debtAvalanche: {
+    en: 'Debt Avalanche',
+    es: 'Avalancha de Deudas'
+  },
+  debtSnowball: {
+    en: 'Debt Snowball',
+    es: 'Bola de Nieve de Deudas'
+  },
+  avalancheDescription: {
+    en: 'Pay off highest interest rate debts first to minimize interest paid',
+    es: 'Paga primero las deudas con tasas de interés más altas para minimizar los intereses pagados'
+  },
+  snowballDescription: {
+    en: 'Pay off smallest balance debts first for psychological wins',
+    es: 'Paga primero las deudas con saldos más pequeños para victorias psicológicas'
+  },
+  extraPaymentDescription: {
+    en: 'Enter any additional amount you can pay monthly beyond the minimum payments',
+    es: 'Ingresa cualquier cantidad adicional que puedas pagar mensualmente más allá de los pagos mínimos'
+  },
+  
+  // Results modal translations
+  debtRepaymentPlan: {
+    en: 'Debt Repayment Plan',
+    es: 'Plan de Pago de Deudas'
+  },
+  resultDescription: {
+    en: 'Based on your inputs, here\'s your personalized debt repayment strategy.',
+    es: 'Basado en tus datos, aquí está tu estrategia personalizada de pago de deudas.'
+  },
+  timeToDebtFreedom: {
+    en: 'Time to Debt Freedom',
+    es: 'Tiempo para Libertad de Deudas'
+  },
+  totalInterestPaid: {
+    en: 'Total Interest Paid',
+    es: 'Intereses Totales Pagados'
+  },
+  totalAmountPaid: {
+    en: 'Total Amount Paid',
+    es: 'Cantidad Total Pagada'
+  },
+  month: {
+    en: 'month',
+    es: 'mes'
+  },
+  months: {
+    en: 'months',
+    es: 'meses'
+  },
+  repaymentOrder: {
+    en: 'Repayment Order',
+    es: 'Orden de Pago'
+  },
+  order: {
+    en: 'Order',
+    es: 'Orden'
+  },
+  payoffLength: {
+    en: 'Payoff Length',
+    es: 'Duración del Pago'
+  },
+  totalPayments: {
+    en: 'Total Payments',
+    es: 'Pagos Totales'
+  },
+  paymentSchedule: {
+    en: 'Payment Schedule',
+    es: 'Calendario de Pagos'
+  },
+  payMonthlyUntilPaidOff: {
+    en: 'Pay each month until paid off.',
+    es: 'Pagar cada mes hasta liquidar.'
+  },
+  unnamedDebt: {
+    en: 'Unnamed Debt',
+    es: 'Deuda Sin Nombre'
+  },
+  
+  // Validation messages
+  errorEmptyCreditor: {
+    en: 'Please provide a name for all creditors',
+    es: 'Por favor proporciona un nombre para todos los acreedores'
+  },
+  errorZeroBalance: {
+    en: 'All debts must have a balance greater than zero',
+    es: 'Todas las deudas deben tener un saldo mayor que cero'
+  },
+  errorZeroPayment: {
+    en: 'All debts must have a minimum payment greater than zero',
+    es: 'Todas las deudas deben tener un pago mínimo mayor que cero'
+  },
+  errorOneDebtRequired: {
+    en: 'You must have at least one debt entry',
+    es: 'Debes tener al menos una entrada de deuda'
+  },
+  debtsSaved: {
+    en: 'Your debts have been saved',
+    es: 'Tus deudas han sido guardadas'
+  },
+  errorSavingDebts: {
+    en: 'Error saving debts:',
+    es: 'Error al guardar las deudas:'
+  },
+  errorFetchingDebts: {
+    en: 'Error fetching debts:',
+    es: 'Error al obtener las deudas:'
   }
 };
 

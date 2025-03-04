@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Debt, DebtCalculationResult, RepaymentMethod } from "../types/debt";
 import DebtTable from "./DebtTable";
@@ -10,9 +9,11 @@ import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 import { supabase } from "../integrations/supabase/client";
 import { useAuth } from "../contexts/AuthContext";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const DebtForm: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [debts, setDebts] = useState<Debt[]>([
     {
       id: uuidv4(),
@@ -56,14 +57,14 @@ const DebtForm: React.FC = () => {
           setDebts(formattedDebts);
         }
       } catch (error: any) {
-        toast.error(`Error fetching debts: ${error.message}`);
+        toast.error(`${t('errorFetchingDebts')} ${error.message}`);
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchDebts();
-  }, [user]);
+  }, [user, t]);
 
   const handleDebtChange = (index: number, field: keyof Debt, value: string) => {
     const newDebts = [...debts];
@@ -71,7 +72,6 @@ const DebtForm: React.FC = () => {
       newDebts[index].creditor = value;
     } else {
       const numValue = value === "" ? 0 : parseFloat(value);
-      // Use type assertion with specific key for better type safety
       if (field === "balance" || field === "apr" || field === "minimumPayment") {
         newDebts[index][field] = numValue;
       }
@@ -94,7 +94,7 @@ const DebtForm: React.FC = () => {
 
   const handleRemoveDebt = (id: string) => {
     if (debts.length === 1) {
-      toast.error("You must have at least one debt entry");
+      toast.error(t('errorOneDebtRequired'));
       return;
     }
     setDebts(debts.filter((debt) => debt.id !== id));
@@ -109,7 +109,6 @@ const DebtForm: React.FC = () => {
     if (!user) return;
     
     try {
-      // First, delete all existing debts for this user
       const { error: deleteError } = await supabase
         .from('debts')
         .delete()
@@ -117,7 +116,6 @@ const DebtForm: React.FC = () => {
       
       if (deleteError) throw deleteError;
       
-      // Then insert all the current debts
       const { error: insertError } = await supabase
         .from('debts')
         .insert(
@@ -132,37 +130,34 @@ const DebtForm: React.FC = () => {
       
       if (insertError) throw insertError;
       
-      toast.success("Your debts have been saved");
+      toast.success(t('debtsSaved'));
     } catch (error: any) {
-      toast.error(`Error saving debts: ${error.message}`);
+      toast.error(`${t('errorSavingDebts')} ${error.message}`);
     }
   };
 
   const handleCalculate = () => {
-    // Validate inputs
     const hasEmptyCreditor = debts.some(debt => !debt.creditor.trim());
     const hasZeroBalance = debts.some(debt => debt.balance <= 0);
     const hasZeroPayment = debts.some(debt => debt.minimumPayment <= 0);
     
     if (hasEmptyCreditor) {
-      toast.error("Please provide a name for all creditors");
+      toast.error(t('errorEmptyCreditor'));
       return;
     }
     
     if (hasZeroBalance) {
-      toast.error("All debts must have a balance greater than zero");
+      toast.error(t('errorZeroBalance'));
       return;
     }
     
     if (hasZeroPayment) {
-      toast.error("All debts must have a minimum payment greater than zero");
+      toast.error(t('errorZeroPayment'));
       return;
     }
     
-    // Save debts to Supabase
     saveDebtsToSupabase(debts);
     
-    // Calculate results
     const calculationResults = calculateDebtRepayment(
       debts,
       repaymentMethod,
@@ -184,7 +179,7 @@ const DebtForm: React.FC = () => {
   return (
     <div className="w-full max-w-4xl mx-auto px-4 space-y-10 py-8">
       <section className="animate-fade-in space-y-4" style={{ animationDelay: '100ms' }}>
-        <h2 className="text-xl font-medium">Step 1: Enter Your Debts</h2>
+        <h2 className="text-xl font-medium">{t('step1Title')}</h2>
         <DebtTable
           debts={debts}
           onDebtChange={handleDebtChange}
@@ -194,7 +189,7 @@ const DebtForm: React.FC = () => {
       </section>
 
       <section className="animate-fade-in space-y-4" style={{ animationDelay: '200ms' }}>
-        <h2 className="text-xl font-medium">Step 2: Choose Repayment Method</h2>
+        <h2 className="text-xl font-medium">{t('step2Title')}</h2>
         <div className="grid grid-cols-2 gap-4">
           <div
             className={cn(
@@ -219,10 +214,10 @@ const DebtForm: React.FC = () => {
                   <div className="w-3 h-3 rounded-full bg-primary animate-scale-in"></div>
                 )}
               </div>
-              <h3 className="text-lg font-medium">Debt Avalanche</h3>
+              <h3 className="text-lg font-medium">{t('debtAvalanche')}</h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              Pay off highest interest rate debts first to minimize interest paid
+              {t('avalancheDescription')}
             </p>
           </div>
 
@@ -249,17 +244,17 @@ const DebtForm: React.FC = () => {
                   <div className="w-3 h-3 rounded-full bg-primary animate-scale-in"></div>
                 )}
               </div>
-              <h3 className="text-lg font-medium">Debt Snowball</h3>
+              <h3 className="text-lg font-medium">{t('debtSnowball')}</h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              Pay off smallest balance debts first for psychological wins
+              {t('snowballDescription')}
             </p>
           </div>
         </div>
       </section>
 
       <section className="animate-fade-in space-y-4" style={{ animationDelay: '300ms' }}>
-        <h2 className="text-xl font-medium">Step 3: Extra Monthly Payment</h2>
+        <h2 className="text-xl font-medium">{t('step3Title')}</h2>
         <div className="relative">
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground">
             <DollarSign size={18} />
@@ -275,7 +270,7 @@ const DebtForm: React.FC = () => {
           />
         </div>
         <p className="text-sm text-muted-foreground">
-          Enter any additional amount you can pay monthly beyond the minimum payments
+          {t('extraPaymentDescription')}
         </p>
       </section>
 
@@ -284,7 +279,7 @@ const DebtForm: React.FC = () => {
           onClick={handleCalculate}
           className="w-full py-4 px-6 bg-primary text-white rounded-lg shadow-md hover:bg-primary/90 transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
         >
-          Calculate Repayment Plan
+          {t('calculateButton')}
         </button>
       </section>
 
