@@ -36,7 +36,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ open, onOpenChange, results
             </div>
             <div className="bg-secondary/50 rounded-lg p-6 text-center animate-slide-up" style={{ animationDelay: '100ms' }}>
               <div className="text-sm font-medium text-muted-foreground mb-1">
-                Total Interest Saved
+                Total Interest Paid
               </div>
               <div className="text-3xl font-bold">
                 {formatCurrency(results.totalInterestPaid)}
@@ -66,42 +66,53 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ open, onOpenChange, results
                       Creditor
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Balance
+                      Payoff Length
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      APR
+                      Total Interest
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      New Payment
+                      Total Payments
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Months to Pay Off
+                      Payment Schedule
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-border">
-                  {results.debtsInPayoffOrder.map((debt, index) => (
-                    <tr key={debt.id} className="transition-colors hover:bg-secondary/20">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {index + 1}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {debt.creditor || "Unnamed Debt"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {formatCurrency(debt.balance)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {formatPercent(debt.apr)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
-                        {formatCurrency(debt.newMonthlyPayment)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {debt.monthsToPayoff} {debt.monthsToPayoff === 1 ? 'month' : 'months'}
-                      </td>
-                    </tr>
-                  ))}
+                  {results.debtsInPayoffOrder.map((debt, index) => {
+                    const totalPayments = debt.balance + debt.totalInterestPaid;
+                    let paymentSchedule = "";
+                    
+                    if (debt.paymentSchedule && debt.paymentSchedule.length > 0) {
+                      paymentSchedule = debt.paymentSchedule.join("\n");
+                    } else {
+                      paymentSchedule = `Pay ${formatCurrency(debt.newMonthlyPayment)} for ${debt.monthsToPayoff - 1} months.\nPay the remainder in the final month.`;
+                    }
+                    
+                    return (
+                      <tr key={debt.id} className="transition-colors hover:bg-secondary/20">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          #{index + 1}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {debt.creditor || "Unnamed Debt"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {debt.monthsToPayoff} {debt.monthsToPayoff === 1 ? 'month' : 'months'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          {formatCurrency(debt.totalInterestPaid)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {formatCurrency(totalPayments)}
+                        </td>
+                        <td className="px-6 py-4 text-sm whitespace-pre-line">
+                          {paymentSchedule}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

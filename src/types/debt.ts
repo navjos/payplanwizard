@@ -11,6 +11,7 @@ export interface DebtWithPayoff extends Debt {
   monthsToPayoff: number;
   totalInterestPaid: number;
   newMonthlyPayment: number;
+  paymentSchedule?: string[];
 }
 
 export interface DebtCalculationResult {

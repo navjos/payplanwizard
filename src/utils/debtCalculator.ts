@@ -1,5 +1,6 @@
 
 import { Debt, DebtCalculationResult, DebtWithPayoff, RepaymentMethod } from "../types/debt";
+import { formatCurrency } from "./formatters";
 
 const sortDebts = (debts: Debt[], method: RepaymentMethod): Debt[] => {
   return [...debts].sort((a, b) => {
@@ -55,6 +56,94 @@ const calculateInterestPaid = (
   return totalPaid - balance;
 };
 
+const generatePaymentSchedule = (
+  balance: number,
+  apr: number,
+  monthlyPayment: number,
+  months: number
+): string[] => {
+  if (months <= 0) return [];
+  
+  const schedule: string[] = [];
+  const monthlyInterestRate = apr / 100 / 12;
+  let remainingBalance = balance;
+  let currentMonth = 1;
+  let previousPayment = monthlyPayment;
+  let paymentChanges = 0;
+  
+  while (remainingBalance > 0 && currentMonth <= months) {
+    const interest = remainingBalance * monthlyInterestRate;
+    let principal = monthlyPayment - interest;
+    
+    // Adjust for final payment
+    if (principal > remainingBalance) {
+      principal = remainingBalance;
+      monthlyPayment = principal + interest;
+    }
+    
+    remainingBalance -= principal;
+    
+    // Look ahead to see if this is the last payment of this amount
+    const isLastPayment = remainingBalance <= 0;
+    const isPaymentChange = !isLastPayment && Math.abs(previousPayment - monthlyPayment) > 0.01;
+    
+    if (currentMonth === 1 || isPaymentChange) {
+      paymentChanges++;
+      const untilMonth = isLastPayment ? currentMonth : null;
+      
+      if (untilMonth) {
+        schedule.push(`Pay ${formatCurrency(monthlyPayment)} at month ${currentMonth} to payoff.`);
+      } else {
+        const nextPaymentChange = findNextPaymentChange(
+          remainingBalance, 
+          monthlyInterestRate, 
+          monthlyPayment, 
+          currentMonth, 
+          months
+        );
+        
+        if (nextPaymentChange > currentMonth) {
+          schedule.push(`Pay ${formatCurrency(monthlyPayment)} until month ${nextPaymentChange - 1}.`);
+          currentMonth = nextPaymentChange - 1;
+        } else {
+          schedule.push(`Pay ${formatCurrency(monthlyPayment)} at month ${currentMonth}.`);
+        }
+      }
+      
+      previousPayment = monthlyPayment;
+    }
+    
+    if (isLastPayment && paymentChanges === 1) {
+      // Simplify schedule if there's only one payment type
+      schedule.length = 0;
+      if (months > 1) {
+        schedule.push(`Pay ${formatCurrency(previousPayment)} for ${months - 1} months.`);
+        schedule.push(`Pay ${formatCurrency(monthlyPayment)} at month ${months} to payoff.`);
+      } else {
+        schedule.push(`Pay ${formatCurrency(monthlyPayment)} at month 1 to payoff.`);
+      }
+      break;
+    }
+    
+    currentMonth++;
+  }
+  
+  return schedule;
+};
+
+// Helper function to find when the payment will change
+const findNextPaymentChange = (
+  balance: number,
+  monthlyInterestRate: number,
+  payment: number,
+  currentMonth: number,
+  totalMonths: number
+): number => {
+  // Simplified: Look ahead to find next payment change
+  // For most scenarios, we'll just return the last month
+  return totalMonths;
+};
+
 export const calculateDebtRepayment = (
   debts: Debt[],
   method: RepaymentMethod,
@@ -101,12 +190,21 @@ export const calculateDebtRepayment = (
       monthsToPayoff
     );
     
+    // Generate payment schedule
+    const paymentSchedule = generatePaymentSchedule(
+      currentDebt.balance,
+      currentDebt.apr,
+      currentPayment,
+      monthsToPayoff
+    );
+    
     // Add to result
     debtsWithPayoff.push({
       ...currentDebt,
       monthsToPayoff,
       totalInterestPaid: interestPaid,
-      newMonthlyPayment: currentPayment
+      newMonthlyPayment: currentPayment,
+      paymentSchedule
     });
     
     // Update totals
@@ -122,8 +220,9 @@ export const calculateDebtRepayment = (
     runningExtraPayment += currentDebt.minimumPayment;
   }
   
-  // Calculate total amount paid
-  const totalAmountPaid = debts.reduce((sum, debt) => sum + debt.balance, 0) + totalInterestPaid;
+  // Calculate total amount paid (principal + interest)
+  const totalPrincipal = debts.reduce((sum, debt) => sum + debt.balance, 0);
+  const totalAmountPaid = totalPrincipal + totalInterestPaid;
   
   return {
     totalMonthsToDebtFree: totalMonths,
