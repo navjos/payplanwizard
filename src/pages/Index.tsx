@@ -17,17 +17,19 @@ const Index: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-medium text-foreground">{t('appTitle')}</h1>
+            <h1 className="text-2xl sm:text-3xl font-medium text-foreground">{t('appTitle')}</h1>
             <p className="text-muted-foreground mt-1">
               {t('appSubtitle')}
             </p>
+            {user && (
+              <p className="text-sm text-muted-foreground mt-1 italic">
+                {user.email}
+              </p>
+            )}
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="text-sm text-muted-foreground">
-              {user?.email}
-            </div>
+          <div className="flex items-center space-x-4 self-end sm:self-auto">
             <div className="flex bg-secondary rounded-md">
               <Button 
                 variant={language === 'en' ? "secondary" : "ghost"}
