@@ -5,9 +5,9 @@ import { formatCurrency } from "./formatters";
 const sortDebts = (debts: Debt[], method: RepaymentMethod): Debt[] => {
   return [...debts].sort((a, b) => {
     if (method === 'avalanche') {
-      return b.apr - a.apr;
+      return b.apr - a.apr; // Highest APR first
     } else {
-      return a.balance - b.balance;
+      return a.balance - b.balance; // Lowest balance first
     }
   });
 };
