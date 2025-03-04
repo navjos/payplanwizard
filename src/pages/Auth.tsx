@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -40,7 +39,6 @@ const Auth = () => {
     },
   });
 
-  // Redirect if already logged in
   React.useEffect(() => {
     if (user && !isLoading) {
       navigate('/');
@@ -84,7 +82,7 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <Card className="shadow-lg">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Debt Payoff Planner</CardTitle>
+            <CardTitle className="text-2xl text-center">WealthOnThe7 Debt Payoff Planner</CardTitle>
             <CardDescription className="text-center">
               Log in or create an account to manage and track your debt payoff journey
             </CardDescription>
