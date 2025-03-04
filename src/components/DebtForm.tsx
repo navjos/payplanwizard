@@ -31,8 +31,10 @@ const DebtForm: React.FC = () => {
       newDebts[index].creditor = value;
     } else {
       const numValue = value === "" ? 0 : parseFloat(value);
-      // Type assertion to fix the TS error
-      newDebts[index][field] = numValue as any;
+      // Use type assertion with specific key for better type safety
+      if (field === "balance" || field === "apr" || field === "minimumPayment") {
+        newDebts[index][field] = numValue;
+      }
     }
     setDebts(newDebts);
   };
