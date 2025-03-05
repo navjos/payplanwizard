@@ -29,6 +29,64 @@ const translations: Translations = {
     es: 'Todos los cálculos son estimaciones.'
   },
   
+  // Authentication page translations
+  login: {
+    en: 'Login',
+    es: 'Iniciar Sesión'
+  },
+  signup: {
+    en: 'Sign Up',
+    es: 'Registrarse'
+  },
+  email: {
+    en: 'Email',
+    es: 'Correo Electrónico'
+  },
+  password: {
+    en: 'Password',
+    es: 'Contraseña'
+  },
+  emailPlaceholder: {
+    en: 'you@example.com',
+    es: 'tu@ejemplo.com'
+  },
+  loginButton: {
+    en: 'Log in',
+    es: 'Iniciar Sesión'
+  },
+  createAccountButton: {
+    en: 'Create account',
+    es: 'Crear cuenta'
+  },
+  loggingIn: {
+    en: 'Logging in...',
+    es: 'Iniciando sesión...'
+  },
+  creatingAccount: {
+    en: 'Creating account...',
+    es: 'Creando cuenta...'
+  },
+  showPassword: {
+    en: 'Show password',
+    es: 'Mostrar contraseña'
+  },
+  hidePassword: {
+    en: 'Hide password',
+    es: 'Ocultar contraseña'
+  },
+  invalidEmail: {
+    en: 'Please enter a valid email address',
+    es: 'Por favor ingresa un correo electrónico válido'
+  },
+  invalidPassword: {
+    en: 'Password must be at least 6 characters',
+    es: 'La contraseña debe tener al menos 6 caracteres'
+  },
+  authDescription: {
+    en: 'Log in or create an account to manage and track your debt payoff journey',
+    es: 'Inicia sesión o crea una cuenta para administrar y seguir tu proceso de pago de deudas'
+  },
+  
   // Debt form translations
   step1Title: {
     en: 'Step 1: Enter Your Debts',

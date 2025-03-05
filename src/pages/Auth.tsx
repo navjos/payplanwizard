@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eye, EyeOff } from "lucide-react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const authSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -26,6 +27,7 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const { language, setLanguage, t } = useLanguage();
 
   const loginForm = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
@@ -84,35 +86,56 @@ const Auth = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-[#FFDEE2] to-[#E5DEFF] px-4">
       <div className="w-full max-w-md">
+        <div className="absolute top-4 right-4 flex bg-secondary rounded-md">
+          <Button 
+            variant={language === 'en' ? "secondary" : "ghost"}
+            size="sm" 
+            onClick={() => setLanguage('en')} 
+            className={`rounded-r-none ${language === 'en' ? 'bg-primary/10 font-medium' : ''}`}
+            aria-label="Switch to English"
+          >
+            EN
+          </Button>
+          <Button 
+            variant={language === 'es' ? "secondary" : "ghost"}
+            size="sm" 
+            onClick={() => setLanguage('es')} 
+            className={`rounded-l-none ${language === 'es' ? 'bg-primary/10 font-medium' : ''}`}
+            aria-label="Switch to Spanish"
+          >
+            ES
+          </Button>
+        </div>
+        
         <Card className="shadow-lg">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">WealthOnThe7 Debt Payoff Planner</CardTitle>
+            <CardTitle className="text-2xl text-center">{t('appTitle')}</CardTitle>
             <CardDescription className="text-center">
-              Log in or create an account to manage and track your debt payoff journey
+              {t('authDescription')}
             </CardDescription>
           </CardHeader>
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "login" | "signup")} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsTrigger value="login">{t('login')}</TabsTrigger>
+              <TabsTrigger value="signup">{t('signup')}</TabsTrigger>
             </TabsList>
             <TabsContent value="login">
               <form onSubmit={loginForm.handleSubmit(handleLogin)}>
                 <CardContent className="space-y-4 pt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
+                    <Label htmlFor="login-email">{t('email')}</Label>
                     <Input
                       id="login-email"
                       type="email"
-                      placeholder="you@example.com"
+                      placeholder={t('emailPlaceholder')}
                       {...loginForm.register("email")}
                     />
                     {loginForm.formState.errors.email && (
-                      <p className="text-sm text-destructive">{loginForm.formState.errors.email.message}</p>
+                      <p className="text-sm text-destructive">{t('invalidEmail')}</p>
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
+                    <Label htmlFor="login-password">{t('password')}</Label>
                     <div className="relative">
                       <Input
                         id="login-password"
@@ -123,13 +146,13 @@ const Auth = () => {
                         type="button"
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         onClick={() => setShowLoginPassword(!showLoginPassword)}
-                        aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                        aria-label={showLoginPassword ? t('hidePassword') : t('showPassword')}
                       >
                         {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
                     {loginForm.formState.errors.password && (
-                      <p className="text-sm text-destructive">{loginForm.formState.errors.password.message}</p>
+                      <p className="text-sm text-destructive">{t('invalidPassword')}</p>
                     )}
                   </div>
                 </CardContent>
@@ -142,9 +165,9 @@ const Auth = () => {
                     {isAuthenticating ? (
                       <span className="flex items-center gap-2">
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-r-transparent"></span>
-                        Logging in...
+                        {t('loggingIn')}
                       </span>
-                    ) : "Log in"}
+                    ) : t('loginButton')}
                   </Button>
                 </CardFooter>
               </form>
@@ -153,19 +176,19 @@ const Auth = () => {
               <form onSubmit={signupForm.handleSubmit(handleSignup)}>
                 <CardContent className="space-y-4 pt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">{t('email')}</Label>
                     <Input
                       id="signup-email"
                       type="email"
-                      placeholder="you@example.com"
+                      placeholder={t('emailPlaceholder')}
                       {...signupForm.register("email")}
                     />
                     {signupForm.formState.errors.email && (
-                      <p className="text-sm text-destructive">{signupForm.formState.errors.email.message}</p>
+                      <p className="text-sm text-destructive">{t('invalidEmail')}</p>
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password">{t('password')}</Label>
                     <div className="relative">
                       <Input
                         id="signup-password"
@@ -176,13 +199,13 @@ const Auth = () => {
                         type="button"
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         onClick={() => setShowSignupPassword(!showSignupPassword)}
-                        aria-label={showSignupPassword ? "Hide password" : "Show password"}
+                        aria-label={showSignupPassword ? t('hidePassword') : t('showPassword')}
                       >
                         {showSignupPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
                     {signupForm.formState.errors.password && (
-                      <p className="text-sm text-destructive">{signupForm.formState.errors.password.message}</p>
+                      <p className="text-sm text-destructive">{t('invalidPassword')}</p>
                     )}
                   </div>
                 </CardContent>
@@ -195,9 +218,9 @@ const Auth = () => {
                     {isAuthenticating ? (
                       <span className="flex items-center gap-2">
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-r-transparent"></span>
-                        Creating account...
+                        {t('creatingAccount')}
                       </span>
-                    ) : "Create account"}
+                    ) : t('createAccountButton')}
                   </Button>
                 </CardFooter>
               </form>
