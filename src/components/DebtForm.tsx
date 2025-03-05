@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Debt, DebtCalculationResult, RepaymentMethod } from "../types/debt";
 import DebtTable from "./DebtTable";
@@ -29,6 +30,7 @@ const DebtForm: React.FC = () => {
   const [showResults, setShowResults] = useState<boolean>(false);
   const [results, setResults] = useState<DebtCalculationResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [debtsChanged, setDebtsChanged] = useState(false);
 
   // Fetch user's debts from Supabase
   useEffect(() => {
@@ -66,6 +68,34 @@ const DebtForm: React.FC = () => {
     fetchDebts();
   }, [user, t]);
 
+  // Auto-save debts when they change
+  useEffect(() => {
+    // Don't save on initial load or if there are no changes
+    if (isLoading || !debtsChanged) return;
+
+    const saveDebtsTimeout = setTimeout(() => {
+      saveDebtsToSupabase(debts);
+      setDebtsChanged(false);
+    }, 2000); // Save after 2 seconds of inactivity
+
+    return () => clearTimeout(saveDebtsTimeout);
+  }, [debts, isLoading, debtsChanged]);
+
+  // Save debts when user is about to navigate away
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (debtsChanged && user) {
+        saveDebtsToSupabase(debts);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [debts, debtsChanged, user]);
+
   const handleDebtChange = (index: number, field: keyof Debt, value: string) => {
     const newDebts = [...debts];
     if (field === "creditor") {
@@ -77,6 +107,7 @@ const DebtForm: React.FC = () => {
       }
     }
     setDebts(newDebts);
+    setDebtsChanged(true);
   };
 
   const handleAddDebt = () => {
@@ -90,6 +121,7 @@ const DebtForm: React.FC = () => {
         minimumPayment: 0,
       },
     ]);
+    setDebtsChanged(true);
   };
 
   const handleRemoveDebt = (id: string) => {
@@ -98,6 +130,7 @@ const DebtForm: React.FC = () => {
       return;
     }
     setDebts(debts.filter((debt) => debt.id !== id));
+    setDebtsChanged(true);
   };
 
   const handleExtraPaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,7 +163,10 @@ const DebtForm: React.FC = () => {
       
       if (insertError) throw insertError;
       
-      toast.success(t('debtsSaved'));
+      // Only show toast for manual saves, not auto-saves
+      if (!debtsChanged) {
+        toast.success(t('debtsSaved'));
+      }
     } catch (error: any) {
       toast.error(`${t('errorSavingDebts')} ${error.message}`);
     }
